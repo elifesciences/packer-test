@@ -1,0 +1,31 @@
+{
+
+"variables": {
+        "ssh_name": "vagrant",
+        "ssh_pass": "vagrant",
+        "hostname": "packer-test",
+        "aws_access_key": "",
+        "aws_secret_key": ""
+    },
+
+  "builders": [{
+    "type": "amazon-ebs",
+    "access_key": "{{user `aws_access_key`}}",
+    "secret_key": "{{user `aws_secret_key`}}",
+    "region": "us-east-1",
+    "source_ami": "ami-de0d9eb7",
+    "instance_type": "m1.medium",
+    "ssh_username": "ubuntu",
+    "ami_name": "elife-packer-example elife drupal2 {{timestamp}}"
+  }],
+  "provisioners": [
+        {
+        "type": "shell",
+         "inline": [
+          "sleep 30",
+          "sudo apt-get -y update",
+          "sudo apt-get -y install vim",          
+          "sudo apt-get -u install curl"                  
+        ]}
+   ]
+}

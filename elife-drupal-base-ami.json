@@ -1,0 +1,86 @@
+{
+
+"variables": {
+        "ssh_name": "vagrant",
+        "ssh_pass": "vagrant",
+        "hostname": "packer-test",
+        "aws_access_key": "",
+        "aws_secret_key": ""
+    },
+
+  "builders": [{
+    "type": "amazon-ebs",
+    "access_key": "{{user `aws_access_key`}}",
+    "secret_key": "{{user `aws_secret_key`}}",
+    "region": "us-east-1",
+    "source_ami": "ami-de0d9eb7",
+    "instance_type": "m1.medium",
+    "ssh_username": "ubuntu",
+    "ami_name": "elife-packer-example elife drupal2 {{timestamp}}"
+  }],
+  "provisioners": [
+        {
+        "type": "shell",
+         "inline": [
+          "sleep 30",
+          "sudo apt-get update",
+          "sudo apt-get install vim"          
+        ]},
+        {
+        "type":"chef-solo",
+          "cookbook_paths": ["cookbooks"],
+          "run_list":  [
+                        "recipe[php]",
+                        "recipe[apache2]",
+                        "recipe[apache2::mod_expires]",
+                        "recipe[apache2::mod_php5]",
+                        "recipe[apache2::mod_rewrite]",                    
+                        "recipe[php::module_curl]",
+                        "recipe[php::module_gd]",
+                        "recipe[php::module_mysql]"
+                        ],
+          "json": 
+                  {
+                    "www_root" : "vagrant/public",
+                    "hosts" : {
+                          "localhost_aliases" : ["drupal.vbox.local", "elife.vbox.local"]
+                            },
+      "php5" : {
+        "max_execution_time" : "60",
+        "memory_limit" : "256M"
+      },
+              "worker" : {
+          "startservers" : 2,
+          "maxclients" : 128,
+          "minsparethreads" : 16,
+          "maxsparethreads" : 128,
+          "threadsperchild" : 16,
+          "maxrequestsperchild" : 0
+        },
+                    "apache" : {
+                          "listen_ports" : [ "80", "443" ],
+                          "keepaliverequests" : 10,
+                          "prefork" : {
+                                  "startservers" : 2,
+                                  "minspareservers" : 1,
+                                  "maxspareservers" : 3,
+                                  "serverlimit" : 4,
+                                  "maxclients" : 4,
+                                  "maxrequestsperchild" : 1000
+                                      }
+                                  }, 
+                    "mysql" : {
+                        "server_root_password" : "root",
+                        "server_repl_password" : "root",
+                        "server_debian_password" : "root",
+                        "elife_user_password" : "elife",
+                        "bind_address" : "127.0.0.1",
+                        "tunable" : {
+                                  "key_buffer" : "384M",
+                                  "table_cache" : "4096"                
+                                    }             
+                          }                  
+                  }                     
+        }
+   ]
+}
