@@ -10,7 +10,11 @@
         "guest_os_type": "Ubuntu_64",
 
         "vboxmanage": [
-            ["modifyvm", "{{.Name}}", "--vram", "32"]
+            ["modifyvm", "{{.Name}}", "--vram", "32"],
+            ["modifyvm", "{{.Name}}", "--natdnsproxy1", "off"],
+            ["modifyvm", "{{.Name}}", "--usb", "off"],
+            ["modifyvm", "{{.Name}}", "--usbehci", "off"],
+            ["modifyvm", "{{.Name}}", "--audio", "none"]
         ],
 
         "disk_size" : 10000,
@@ -32,7 +36,7 @@
         "boot_command" : [
             "<esc><esc><enter><wait>",
             "/install/vmlinuz noapic ",
-            "preseed/url=http://cdn.elifesciences.org/vm/preseed-example.cfg ",
+            "preseed/url=http://{{.HTTPIP}}:{{.HTTPPort}}/preseed.cfg ",
             "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
             "hostname={{user `hostname`}} ",
             "fb=false debconf/frontend=noninteractive ",
@@ -41,6 +45,22 @@
             "initrd=/install/initrd.gz -- <enter>"
         ]
     }],
+
+    "provisioners": [
+      {
+        "type": "shell",
+        "scripts": [
+          "scripts/virtualbox.sh",
+          "scripts/vagrant.sh",
+          "scripts/chef.sh"
+        ],
+        "override": {
+          "virtualbox": {
+            "execute_command": "echo '{{user `ssh_pass`}}'|sudo -S sh '{{.Path}}'"
+          }
+        }
+      }
+    ],
 
   "post-processors": [
                       {
